@@ -17,7 +17,7 @@ $location = "EastUS"
 $template = New-PsArmTemplate
 
 # Add the Vnet, with Subnets:
-$vnet =  New-PsArmVnet -Name 'MyVNet' -AddressPrefixes '10.0.0.0/16' |
+$vNet =  New-PsArmVnet -Name 'MyVNet' -AddressPrefixes '10.0.0.0/16' |
         Add-PsArmVnetSubnet -Name 'Front-End' -AddressPrefix '10.0.0.0/24' |
         Add-PsArmVnetSubnet -Name 'Back-End' -AddressPrefix '10.0.1.0/24'
 $template.resources += $vnet
@@ -28,11 +28,9 @@ $WebPublicIP = New-PsArmPublicIpAddress -Name 'Web-Pip0' -AllocationMethod Dynam
 $template.resources += $WebPublicIP
 
 # Create the Web NIC, with references to SubNet and PublicIP, and add to template
-$PublicIpId = Get-PsArmResourceId -Resource $WebPublicIP
-$FESubnetId = Get-PsArmVnetSubnetId -Vnet $vNet -SubnetName 'Front-End'
 $WebNic = New-PsArmNetworkInterface -Name 'Web-Nic0' `
-    -SubnetId $FESubnetId `
-    -PublicIpAddressId $PublicIpId
+    -SubnetId $vNet.SubnetId('Front-End') `
+    -PublicIpAddressId $WebPublicIp.Id()
 $template.resources += $WebNic
 
 # VMs require storege
@@ -44,17 +42,16 @@ $UserName='pburkholder'
 $Password='3nap-sn0t-RR'
 
 # Add the WebVM
-$WebNicId = Get-PsArmResourceId -Resource $WebNic
 $WebVM = New-PsArmVMConfig -VMName 'MyWebServer' -VMSize 'Standard_DS1_V2' |
         Set-PsArmVMOperatingSystem -Windows -ComputerName 'MyWebServer' `
             -AdminUserName $UserName -AdminPassword $Password -ProvisionVMAgent -EnableAutoUpdate |
         Set-PsArmVMSourceImage -Publisher MicrosoftWindowsServer `
             -Offer WindowsServer -Sku 2012-R2-Datacenter -Version "latest" |
-        Add-PsArmVMNetworkInterface -Id $WebNicId |
+        Add-PsArmVMNetworkInterface -Id $WebNic.Id() |
         Set-PsArmVMOSDisk -Name 'MyWebServer_osdisk' -Caching 'ReadWrite' `
             -CreateOption 'FromImage' -SourceImage $null `
             -VhdUri 'https://myrgdemostorage.blob.core.windows.net/vhds/MyWebServer_osdisk.vhd' |
-        Add-PsArmVmDependsOn -Id $(Get-PsArmResourceId -Resource $Storage)
+        Add-PsArmVmDependsOn -Id $Storage.Id()
 $Template.resources += $WebVM
 
 # Template is complete, now deploy it:
@@ -63,7 +60,7 @@ $templatefile = $resourceGroupName + '.json'
 $deploymentName = $resourceGroupName + $(get-date -f yyyyMMddHHmmss)
 Save-PsArmTemplate -Template $template -TemplateFile $templatefile
 
-if ( $RunIt) {
+if ($RunIt) {
   New-AzureRmResourceGroup -Name $ResourceGroupName -Location $location -Force
   New-AzureRmResourceGroupDeployment -Name $deploymentName -Mode Complete -Force `
     -ResourceGroupName $ResourceGroupName -TemplateFile $templateFile -Verbose
