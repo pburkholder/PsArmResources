@@ -52,7 +52,6 @@ Class PsArmStorageAccount {
     [hashtable] $tags
     [PsArmStorageSku] $sku
     [string] $kind = 'Storage'
-    [string] $tags
     [string] Id() {
         return "[resourceId('{0}', '{1}')]"  -f $this.type,$this.name
     }
