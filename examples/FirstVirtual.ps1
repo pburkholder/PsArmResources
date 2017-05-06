@@ -1,4 +1,9 @@
+param( 
+ [Parameter(Mandatory=$False)]
+ [switch] $RunIt 
+)
 Import-Module "PsArmResources" -Force
+Set-StrictMode -Version latest
 
 $location = "EastUS"
 # Initialize the Template
@@ -15,7 +20,6 @@ $template.resources += $vnet
 $WebPublicIP = New-PsArmPublicIpAddress -Name 'Web-Pip0' -AllocationMethod Dynamic 
 $template.resources += $WebPublicIP
 
-
 # Create the Web NIC, with references to SubNet and PublicIP, and add to template
 $PublicIpId = Get-PsArmResourceId -Resource $WebPublicIP
 $FESubnetId = Get-PsArmVnetSubnetId -Vnet $vNet -SubnetName 'Front-End'
@@ -24,24 +28,29 @@ $WebNic = New-PsArmNetworkInterface -Name 'Web-Nic0' `
     -PublicIpAddressId $PublicIpId
 $template.resources += $WebNic
 
-
-function later() {
 $UserName='pburkholder'
 $Password='3nap-sn0t-RR'
 
 # Add the WebVM
 $WebNicId = Get-PsArmResourceId -Resource $WebNic
 $Template.resources += 
-    New-PsArmVMConfig -VMName 'MyWebServer' -VMSize 'DS1_V2 Standard' |
+    New-PsArmVMConfig -VMName 'MyWebServer' -VMSize 'Standard_DS1_V2' |
         Set-PsArmVMOperatingSystem -Windows -ComputerName 'MyWebServer' `
             -AdminUserName $UserName -AdminPassword $Password -ProvisionVMAgent -EnableAutoUpdate |
         Set-PsArmVMSourceImage -Publisher MicrosoftWindowsServer `
             -Offer WindowsServer -Sku 2012-R2-Datacenter -Version "latest" |
-        Add-PsArmVMNetworkInterface -Id $WebNicId
-
-#        Set-PsArmVMOSDisk -Name $OSDiskName -CreateOption FromImage
-}
+        Add-PsArmVMNetworkInterface -Id $WebNicId |
+        Set-PsArmVMOSDisk -Name $OSDiskName -CreateOption FromImage
 
 $resourceGroupName = 'MyRG'
-Save-PsArmTemplate -Template $template -TemplateFile ($resourceGroupName + '.json')
-New-AzureRmResourceGroup -Name $ResourceGroupName -Location $location -Force
+$templatefile = $resourceGroupName + '.json'
+$deploymentName = $resourceGroupName + $(get-date -f yyyyMMddHHmmss)
+Save-PsArmTemplate -Template $template -TemplateFile $templatefile
+Test-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName `
+    -TemplateFile $templatefile -Verbose
+
+if ( $RunIt) {
+  New-AzureRmResourceGroup -Name $ResourceGroupName -Location $location -Force
+  New-AzureRmResourceGroupDeployment -Name $deploymentName -Mode Complete -Force `
+    -ResourceGroupName $ResourceGroupName -TemplateFile $templateFile -Verbose
+}
