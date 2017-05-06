@@ -1,9 +1,16 @@
+<# 
+This is the PsArmResource equivalent to the tutorial,
+"Create your first virtual network" at
+https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-get-started-vnet-subnet
+#>
+
 param( 
  [Parameter(Mandatory=$False)]
  [switch] $RunIt 
 )
 Import-Module "PsArmResources" -Force
 Set-StrictMode -Version latest
+$ErrorActionPreference = "Stop"
 
 $location = "EastUS"
 # Initialize the Template
@@ -28,26 +35,33 @@ $WebNic = New-PsArmNetworkInterface -Name 'Web-Nic0' `
     -PublicIpAddressId $PublicIpId
 $template.resources += $WebNic
 
+# VMs require storege
+$Storage = New-PsArmStorageAccount -Name 'myrgdemostorage' -Tier 'Standard' `
+        -Replication 'LRS' -Location $location
+$template.resources += $Storage
+
 $UserName='pburkholder'
 $Password='3nap-sn0t-RR'
 
 # Add the WebVM
 $WebNicId = Get-PsArmResourceId -Resource $WebNic
-$Template.resources += 
-    New-PsArmVMConfig -VMName 'MyWebServer' -VMSize 'Standard_DS1_V2' |
+$WebVM = New-PsArmVMConfig -VMName 'MyWebServer' -VMSize 'Standard_DS1_V2' |
         Set-PsArmVMOperatingSystem -Windows -ComputerName 'MyWebServer' `
             -AdminUserName $UserName -AdminPassword $Password -ProvisionVMAgent -EnableAutoUpdate |
         Set-PsArmVMSourceImage -Publisher MicrosoftWindowsServer `
             -Offer WindowsServer -Sku 2012-R2-Datacenter -Version "latest" |
         Add-PsArmVMNetworkInterface -Id $WebNicId |
-        Set-PsArmVMOSDisk -Name $OSDiskName -CreateOption FromImage
+        Set-PsArmVMOSDisk -Name 'MyWebServer_osdisk' -Caching 'ReadWrite' `
+            -CreateOption 'FromImage' -SourceImage $null `
+            -VhdUri 'https://myrgdemostorage.blob.core.windows.net/vhds/MyWebServer_osdisk.vhd' |
+        Add-PsArmVmDependsOn -Id $(Get-PsArmResourceId -Resource $Storage)
+$Template.resources += $WebVM
 
+# Template is complete, now deploy it:
 $resourceGroupName = 'MyRG'
 $templatefile = $resourceGroupName + '.json'
 $deploymentName = $resourceGroupName + $(get-date -f yyyyMMddHHmmss)
 Save-PsArmTemplate -Template $template -TemplateFile $templatefile
-Test-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName `
-    -TemplateFile $templatefile -Verbose
 
 if ( $RunIt) {
   New-AzureRmResourceGroup -Name $ResourceGroupName -Location $location -Force
