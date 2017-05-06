@@ -1,0 +1,130 @@
+<section>
+
+<!-- 
+View here: (?)
+https://htmlpreview.github.io/?https://raw.githubusercontent.com/pburkholder/PsArmResources/master/presentation/slides/index.html#/>
+
+Can't decide between <a href="https://github.com/jedcn/reveal-ck">https://github.com/jedcn/reveal-ck</a> or <a href="https://github.com/webpro/reveal-md">https://github.com/webpro/reveal-md</a>
+-->
+
+</section>
+<section>
+
+<h1>Azure Code-Driven Infrastructure</h1>
+
+<ul>
+  <li>A word about Azure</li>
+  <li>The way of Portal</li>
+  <li>The way of suffering</li>
+  <li>The way of Posh</li>
+  <li>The testable way</li>
+</ul>
+
+</section>
+<section>
+
+<section data-background="https://secure.aadcdn.microsoftonline-p.com/ests/2.1.5898.9/content/images/default_signin_illustration.png"></section>
+
+<h1><br></h1>
+<h1><br></h1>
+<h1>Azure</h1>
+
+</section>
+<section>
+
+<h2>Reference Architecture</h2>
+
+<p><img src="https://docs.microsoft.com/en-us/azure/virtual-network/media/virtual-network-get-started-vnet-subnet/vnet-diagram.png" alt="My First VNet" style="width: 100%;"></p>
+
+<aside class="notes">
+
+<p><a href="https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-get-started-vnet-subnet">https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-get-started-vnet-subnet</a></p>
+
+</aside>
+
+<p>Note:<br>
+<a href="https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-get-started-vnet-subnet">https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-get-started-vnet-subnet</a></p>
+
+</section>
+<section>
+
+<section data-background-image="images/portal.gif"></section>
+
+<h2><br></h2>
+<h2><br></h2>
+<h2>The Portal Way</h2>
+
+</section>
+<section>
+
+<pre><code class="language-bash">brew cask install powershell
+powershell
+</code></pre>
+
+</section>
+<section>
+
+<pre><code># Get the AzureRM .NET core 0.3.4 preview
+Install-Module AzureRM.NetCore.Preview
+Import-Module AzureRM.NetCore.Preview
+Install-Module AzureRM -MinimumVersion 3.8.0 -Scope CurrentUser
+</code></pre>
+
+</section>
+<section>
+
+<section data-background="http://static.guim.co.uk/sys-images/Arts/Arts_/Pictures/2015/2/18/1424262922461/Exodus-II-Dubai-UAE-2010--001.jpg"></section>
+
+<!-- .slide: data-background="http://static.guim.co.uk/sys-images/Arts/Arts_/Pictures/2015/2/18/1424262922461/Exodus-II-Dubai-UAE-2010--001.jpg" -->
+
+<h1>Infrastructure</h1>
+
+</section>
+<section>
+
+<p>PowerShell AzureRM on OsX or Linux is very limited at this time because the underlying .NET libraries are pretty limited. You <em>can</em> login and do some basic calls against resources, but not much else. See for more: <a href="https://github.com/Azure/azure-powershell/issues/3178">https://github.com/Azure/azure-powershell/issues/3178</a><br>
+and <a href="https://github.com/Azure/azure-powershell/issues/3746">https://github.com/Azure/azure-powershell/issues/3746</a> - June 2017 milestone.</p>
+
+</section>
+<section>
+
+<h1>Welcome</h1>
+
+</section>
+<section>
+
+<h2>Superb Tables</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Value</th>
+      <th>Quantity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Apples</td>
+      <td>$1</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>Lemonade</td>
+      <td>$2</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <td>Bread</td>
+      <td>$3.50</td>
+      <td>2</td>
+    </tr>
+  </tbody>
+</table>
+
+</section>
+<section>
+
+<h1>Thank You</h1>
+
+</section>
