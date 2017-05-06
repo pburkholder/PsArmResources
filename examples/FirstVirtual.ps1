@@ -5,7 +5,6 @@ https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-get-start
 #>
 
 param( 
- [Parameter(Mandatory=$False)]
  [switch] $RunIt 
 )
 Import-Module "PsArmResources" -Force
@@ -23,14 +22,14 @@ $vNet =  New-PsArmVnet -Name 'MyVNet' -AddressPrefixes '10.0.0.0/16' |
 $template.resources += $vnet
 
 # Create the Web PublicIP object and add to template
-#$WebPublicIP = New-PsArmPublicIpAddress -Name 'Web-Pip0' -AllocationMethod Dynamic -Location $location
 $WebPublicIP = New-PsArmPublicIpAddress -Name 'Web-Pip0' -AllocationMethod Dynamic 
 $template.resources += $WebPublicIP
 
 # Create the Web NIC, with references to SubNet and PublicIP, and add to template
 $WebNic = New-PsArmNetworkInterface -Name 'Web-Nic0' `
     -SubnetId $vNet.SubnetId('Front-End') `
-    -PublicIpAddressId $WebPublicIp.Id()
+    -PublicIpAddressId $WebPublicIp.Id() 
+$WebNic.dependsOn += $vNet.Id()
 $template.resources += $WebNic
 
 # VMs require storege
@@ -53,6 +52,24 @@ $WebVM = New-PsArmVMConfig -VMName 'MyWebServer' -VMSize 'Standard_DS1_V2' |
             -VhdUri 'https://myrgdemostorage.blob.core.windows.net/vhds/MyWebServer_osdisk.vhd' |
         Add-PsArmVmDependsOn -Id $Storage.Id()
 $Template.resources += $WebVM
+
+# Add the DBVM - First the Nic:
+$DbNic = New-PsArmNetworkInterface -Name 'Db-Nic0' `
+    -SubnetId $vNet.SubnetId('Back-End')
+$DbNic.dependsOn += $vNet.id()     
+$template.resources += $DbNic
+
+$DbVM = New-PsArmVMConfig -VMName 'MyDbServer' -VMSize 'Standard_DS1_V2' |
+        Set-PsArmVMOperatingSystem -Windows -ComputerName 'MyDbServer' `
+            -AdminUserName $UserName -AdminPassword $Password -ProvisionVMAgent -EnableAutoUpdate |
+        Set-PsArmVMSourceImage -Publisher MicrosoftWindowsServer `
+            -Offer WindowsServer -Sku 2012-R2-Datacenter -Version "latest" |
+        Add-PsArmVMNetworkInterface -Id $DbNic.Id() |
+        Set-PsArmVMOSDisk -Name 'MyDbServer_osdisk' -Caching 'ReadWrite' `
+            -CreateOption 'FromImage' -SourceImage $null `
+            -VhdUri 'https://myrgdemostorage.blob.core.windows.net/vhds/MyDbServer_osdisk.vhd' |
+        Add-PsArmVmDependsOn -Id $Storage.Id()
+$template.resources += $DbVM
 
 # Template is complete, now deploy it:
 $resourceGroupName = 'MyRG'

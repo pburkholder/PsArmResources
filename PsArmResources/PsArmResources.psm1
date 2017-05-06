@@ -414,6 +414,10 @@ Class PsArmVnet {
     [string] SubnetId([string] $SubnetName) {
        return "[concat(resourceId('{0}', '{1}'), '/subnets/{2}')]" -f $this.type,$this.name,$SubnetName
     }
+    [string] Id() {
+       return "[resourceId('{0}', '{1}')]"  -f $this.type,$this.name
+    }
+
 }
 
 # virtual Network Gateways
