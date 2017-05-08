@@ -1,6 +1,7 @@
 # A DRY version of FirstVirtual.ps1
 param( 
- [switch] $RunIt 
+ [switch] $RunIt,
+ [string] $Path
 )
 Import-Module "PsArmResources" -Force
 Set-StrictMode -Version latest
@@ -68,7 +69,11 @@ $DbVM = New-StandardVM -VMName 'MyDbServer' -UserName $UserName -Password $Passw
 $template.resources += $DbVM
 
 $resourceGroupName = 'MyRG'
+
 $templatefile = $resourceGroupName + '.json'
+if ($Path) {
+    $templatefile = $Path
+}
 $deploymentName = $resourceGroupName + $(get-date -f yyyyMMddHHmmss)
 Save-PsArmTemplate -Template $template -TemplateFile $templatefile
 
