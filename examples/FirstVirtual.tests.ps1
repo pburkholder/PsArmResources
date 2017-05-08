@@ -1,17 +1,27 @@
 <#   
-Invoke-Pester -Test DevCICDPipelineVA 
+Invoke-Pester -Test MyRG
 #>
 
 Import-Module "PsArmPester" -Force
 
 $ResourceGroupName = 'MyRG'
-$DeployScriptName  = 'FirstVirtual.ps1'
+$DeployScriptName  = 'FirstVirtualDRY.ps1'
 # next line finds the deploy script relative to this test script:
 $DeployScript = Join-Path ($PSCommandPath | Split-Path -Parent) $DeployScriptName
 
 # Set up test cases
-$ResourceTotalTestCase = 5
+$ResourceTotalTestCase = 7
 $ResourceSummaryTestCases = @( 
+    @{
+        Resource = "Microsoft.Network/virtualNetworks"
+        Expected = 1
+    },
+
+    @{
+        Resource = "Microsoft.Network/publicIPAddresses"
+        Expected = 1
+    },
+
     @{
         Resource = "Microsoft.Network/networkInterfaces"
         Expected = 2
@@ -45,6 +55,14 @@ $StorageCases = @(
     }
 )
 
+$vNetCases = @(
+    @{
+        Name = 'myvnet'
+        SubnetCount = 2
+        AddressPrefix = '10.0.0.0/16'
+    }
+)
+
 Describe $ResourceGroupName -Tag Actual {
     $actual = Get-ActualResourceGroup $ResourceGroupName
     Audit-ResourceGroupTotal $actual $ResourceTotalTestCase
@@ -59,4 +77,5 @@ Describe $ResourceGroupName -Tag Desired  {
     Audit-ResourceGroupSummary $desired $ResourceSummaryTestCases
     Audit-ResourceGroupVMs $desired $VMTestCases
     Audit-ResourceGroupStorage $desired $StorageCases
+    Audit-AzureRMVnet $desired $vNetCases
 }

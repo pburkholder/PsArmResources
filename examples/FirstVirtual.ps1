@@ -5,7 +5,8 @@ https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-get-start
 #>
 
 param( 
- [switch] $RunIt 
+ [switch] $RunIt,
+ [string] $Path
 )
 Import-Module "PsArmResources" -Force
 Set-StrictMode -Version latest
@@ -20,6 +21,7 @@ $vNet =  New-PsArmVnet -Name 'MyVNet' -AddressPrefixes '10.0.0.0/16' |
         Add-PsArmVnetSubnet -Name 'Front-End' -AddressPrefix '10.0.0.0/24' |
         Add-PsArmVnetSubnet -Name 'Back-End' -AddressPrefix '10.0.1.0/24'
 $template.resources += $vnet
+$template.resources += $vnet2
 
 # Create the Web PublicIP object and add to template
 $WebPublicIP = New-PsArmPublicIpAddress -Name 'Web-Pip0' -AllocationMethod Dynamic 
@@ -74,6 +76,9 @@ $template.resources += $DbVM
 # Template is complete, now deploy it:
 $resourceGroupName = 'MyRG'
 $templatefile = $resourceGroupName + '.json'
+if ($path) {
+    $templatefile = $Path
+}
 $deploymentName = $resourceGroupName + $(get-date -f yyyyMMddHHmmss)
 Save-PsArmTemplate -Template $template -TemplateFile $templatefile
 
