@@ -43,7 +43,7 @@ $VMTestCases = @(
     },
     @{
         Name = 'MyDBServer'
-        VmSize = 'Standard_DS1_V2'
+        VmSize = 'Standard_DS2_V2'
     }
 ) 
 

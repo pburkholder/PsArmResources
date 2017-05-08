@@ -61,7 +61,7 @@ $DbNic = New-PsArmNetworkInterface -Name 'Db-Nic0' `
 $DbNic.dependsOn += $vNet.id()     
 $template.resources += $DbNic
 
-$DbVM = New-PsArmVMConfig -VMName 'MyDbServer' -VMSize 'Standard_DS1_V2' |
+$DbVM = New-PsArmVMConfig -VMName 'MyDbServer' -VMSize 'Standard_DS2_V2' |
         Set-PsArmVMOperatingSystem -Windows -ComputerName 'MyDbServer' `
             -AdminUserName $UserName -AdminPassword $Password -ProvisionVMAgent -EnableAutoUpdate |
         Set-PsArmVMSourceImage -Publisher MicrosoftWindowsServer `
