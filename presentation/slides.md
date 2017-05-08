@@ -19,7 +19,7 @@ reveal-md: https://github.com/webpro/reveal-md
 * A word about Azure
 * The way of Portal
 * The way of JSON
-* The way of Posh
+* The way of POSH
 * The way of Tests
 
 ---
@@ -30,8 +30,8 @@ reveal-md: https://github.com/webpro/reveal-md
 # <br>
 # Azure
 
-
 ```note
+Also: Microsoft cloud, but I like the name of the color
 IaaS: 3 datacenters: DoD, usgovvirginia, usgoviowa
 PaaS: 
   - SQL server as a service
@@ -239,9 +239,143 @@ $DbVM = New-StandardVM -VMName 'MyDbServer' -UserName $UserName -Password $Passw
 
 # The Way of Testing
 
+1. Will my script produce the _desired_ outcome?
+2. Does my _actual_ resource group match my specification?
+
 ---
 
-# A slide
+# Test the desired state
+
+```ps1
+Invoke-Pester -Test MyRG -Tag Desired
+Describing MyRG
+   Context Resource Group Total
+    [+] should have 7 total resources 114ms
+   Context Overall Group
+    [+] should have 1 Microsoft.Network/virtualNetworks 36ms
+    [+] should have 1 Microsoft.Network/publicIPAddresses 18ms
+    [+] should have 2 Microsoft.Network/networkInterfaces 20ms
+    [+] should have 1 Microsoft.Storage/storageAccounts 19ms
+    [+] should have 2 Microsoft.Compute/virtualMachines 15ms
+   Context VMs
+    [+] desired should include VM named MyWebServer and sized Standard_DS1_V2 39ms
+    [+] desired should include VM named MyDBServer and sized Standard_DS1_V2 22ms
+   Context StorageAccounts
+    [+] should True include storage account myrgdemostorage 39ms
+    [+] should use replication LRS 30ms
+   Context VNet
+    [+] should include vNet myvnet 39ms
+    [+] should use AddressPrefix <AddressPrefixes> 18ms
+    [+] should have 2 subnets 19ms
+Tests completed in 434ms
+Passed: 13 Failed: 0 Skipped: 0 Pending: 0 Inconclusive: 0
+```
+
+---
+
+```ps1
+
+<#   
+Invoke-Pester -Test MyRG
+#>
+
+Import-Module "PsArmPester" -Force
+
+$ResourceGroupName = 'MyRG'
+$DeployScriptName  = 'FirstVirtualDRY.ps1'
+# next line finds the deploy script relative to this test script:
+$DeployScript = Join-Path ($PSCommandPath | Split-Path -Parent) $DeployScriptName
+
+# Set up test cases
+$ResourceTotalTestCase = 7
+$ResourceSummaryTestCases = @( 
+    @{
+        Resource = "Microsoft.Network/virtualNetworks"
+        Expected = 1
+    },
+
+    @{
+        Resource = "Microsoft.Network/publicIPAddresses"
+        Expected = 1
+    },
+
+    @{
+        Resource = "Microsoft.Network/networkInterfaces"
+        Expected = 2
+    },
+    @{
+        Resource = "Microsoft.Storage/storageAccounts"
+        Expected = 1
+    },
+    @{
+        Resource = 'Microsoft.Compute/virtualMachines'
+        Expected = 2
+    }
+) 
+
+$VMTestCases = @(
+    @{
+        Name = 'MyWebServer'
+        VmSize = 'Standard_DS1_V2'
+    },
+    @{
+        Name = 'MyDBServer'
+        VmSize = 'Standard_DS1_V2'
+    }
+) 
+
+$StorageCases = @(
+    @{
+        Name = 'myrgdemostorage'
+        State = $true
+        Replication = 'LRS'
+    }
+)
+
+$vNetCases = @(
+    @{
+        Name = 'myvnet'
+        SubnetCount = 2
+        AddressPrefix = '10.0.0.0/16'
+    }
+)
+
+Describe $ResourceGroupName -Tag Actual {
+    $actual = Get-ActualResourceGroup $ResourceGroupName
+    Audit-ResourceGroupTotal $actual $ResourceTotalTestCase
+    Audit-ResourceGroupSummary $actual $ResourceSummaryTestCases
+    Audit-ResourceGroupVMs $actual $VMTestCases
+    Audit-ResourceGroupStorage $actual $StorageCases
+}
+
+Describe $ResourceGroupName -Tag Desired  {
+    $desired = Get-DesiredResourceGroup $ResourceGroupName $DeployScript
+    Audit-ResourceGroupTotal $desired $ResourceTotalTestCase
+    Audit-ResourceGroupSummary $desired $ResourceSummaryTestCases
+    Audit-ResourceGroupVMs $desired $VMTestCases
+    Audit-ResourceGroupStorage $desired $StorageCases
+    Audit-AzureRMVnet $desired $vNetCases
+}
+```
+
+---
+
+# Test Actual State
+
+```ps1
+Invoke-Pester -Test MyRG -Tag Desired
+```
+
+---
+
+
+# Reconcile
+- Update tests to DS4_V2
+- Test Desired State Fail
+- Update code
+- Test Desired State Passes
+- Update actuality
+- Test Actual State
 
 ***
 ***
@@ -250,6 +384,19 @@ $DbVM = New-StandardVM -VMName 'MyDbServer' -UserName $UserName -Password $Passw
 
 ---
 
+# Randomize the Resource Group
+
+```ps1
+$ResourceGroupName = "MyRG"
+$VMName = "MyDBServer"
+$NewVMSize = "Standard_DS2_V2"
+ 
+$vm = Get-AzureRmVM -ResourceGroupName $ResourceGroupName -Name $VMName
+$vm.HardwareProfile.vmSize = $NewVMSize
+Update-AzureRmVM -ResourceGroupName $ResourceGroupName -VM $vm
+```
+
+---
 PowerShell AzureRM on OsX or Linux is very limited at this time because the underlying .NET libraries are pretty limited. You _can_ login and do some basic calls against resources, but not much else. See for more: https://github.com/Azure/azure-powershell/issues/3178
 and https://github.com/Azure/azure-powershell/issues/3746 - June 2017 milestone.
 
