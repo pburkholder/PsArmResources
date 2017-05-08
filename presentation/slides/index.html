@@ -48,10 +48,17 @@
     <section>
 
 <!-- 
+
+This presentation is written for rendering by reveal-ck. It would not take much 
+to rework for reveal-md. At this point I find the code syntax hightlighting works
+better in reveal-ck.
+
 View here: (?)
 https://htmlpreview.github.io/?https://raw.githubusercontent.com/pburkholder/PsArmResources/master/presentation/slides/index.html#/>
 
-Can't decide between <a href="https://github.com/jedcn/reveal-ck">https://github.com/jedcn/reveal-ck</a> or <a href="https://github.com/webpro/reveal-md">https://github.com/webpro/reveal-md</a>
+reveal-ck: <a href="https://github.com/jedcn/reveal-ck">https://github.com/jedcn/reveal-ck</a> 
+reveal-md: <a href="https://github.com/webpro/reveal-md">https://github.com/webpro/reveal-md</a>
+
 -->
 
 </section>
@@ -62,9 +69,9 @@ Can't decide between <a href="https://github.com/jedcn/reveal-ck">https://github
 <ul>
   <li>A word about Azure</li>
   <li>The way of Portal</li>
-  <li>The way of suffering</li>
+  <li>The way of JSON</li>
   <li>The way of Posh</li>
-  <li>The testable way</li>
+  <li>The way of Tests</li>
 </ul>
 
 </section>
@@ -76,55 +83,274 @@ Can't decide between <a href="https://github.com/jedcn/reveal-ck">https://github
 <h1><br></h1>
 <h1>Azure</h1>
 
+<aside class="notes">
+
+<p>IaaS: 3 datacenters: DoD, usgovvirginia, usgoviowa<br>
+PaaS:</p>
+<ul>
+  <li>SQL server as a service</li>
+  <li>Azure App Service - integration w/ VSTS, BB, GitHub
+    <ul>
+      <li>node</li>
+      <li>php</li>
+      <li>java</li>
+      <li>.Net</li>
+      <li>python<br>
+SaaS: The cash cow. O365 and AzureAD are winners.</li>
+      <li>offload authentication, DLP, Phishing detection</li>
+    </ul>
+  </li>
+</ul>
+
+<p>We’ll just look at IaaS…</p>
+
+</aside>
+
 </section>
 <section>
 
 <h2>Reference Architecture</h2>
 
-<p><img src="https://docs.microsoft.com/en-us/azure/virtual-network/media/virtual-network-get-started-vnet-subnet/vnet-diagram.png" alt="My First VNet" style="width: 100%;"></p>
+<p><a href="https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-get-started-vnet-subnet">
+<img src="https://docs.microsoft.com/en-us/azure/virtual-network/media/virtual-network-get-started-vnet-subnet/vnet-diagram.png" alt="Create your first virtual network walkthrough" style="height: 100%;">
+</a></p>
 
 <aside class="notes">
 
-<p><a href="https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-get-started-vnet-subnet">https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-get-started-vnet-subnet</a></p>
+<p>This is the “Create your first virtual network walkthrough”:<br>
+<a href="https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-get-started-vnet-subnet">https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-get-started-vnet-subnet</a></p>
 
 </aside>
-
-<p>Note:<br>
-<a href="https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-get-started-vnet-subnet">https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-get-started-vnet-subnet</a></p>
 
 </section>
 <section>
 
 <section data-background-image="images/portal.gif"></section>
 
-<h2><br></h2>
-<h2><br></h2>
-<h2>The Portal Way</h2>
+<h1><br></h1>
+<h1><br></h1>
+<h1>The Way of the Portal</h1>
+
+<aside class="notes">
+
+<p>ffmpeg -i in.mov -s 600x400 -pix_fmt rgb24 -r 10 -f gif - | gifsicle –optimize=3 –delay=10 &gt; out.gif<br>
+from <br>
+<a href="https://gist.github.com/dergachev/4627207">https://gist.github.com/dergachev/4627207</a></p>
+
+</aside>
 
 </section>
 <section>
 
-<pre><code class="language-bash">brew cask install powershell
-powershell
+<section data-background-image="images/json_way.png"></section>
+
+<h1><br></h1>
+<h1><br></h1>
+<h1><a href="https://gist.github.com/pburkholder/292d450f11d616d2f8af6f62f021ab6f#file-myrg-json">The way of JSON</a></h1>
+
+</section>
+<section>
+
+<h1>Implementation</h1>
+
+<pre><code class="language-ps1">New-AzureRmResourceGroup -Name $ResourceGroupName -Location $location -Force
+New-AzureRmResourceGroupDeployment -Name $deploymentName -Force `
+    -ResourceGroupName $ResourceGroupName -TemplateFile $templateFile -Verbose `
+    -Mode Complete 
+</code></pre>
+
+</section>
+<section>
+<section>
+
+</section>
+</section>
+<section>
+
+<h1>The Way of POSH</h1>
+
+<ul>
+  <li>Powershell passes objects, not strings</li>
+  <li><a href="https://github.com/mikeehsu/PsArmResources">Mike Hsu’s PsArmResource project</a></li>
+  <li>An Azure Resource Manager Template is then composable
+    <ul>
+      <li>Create a blank template</li>
+      <li>Define a PsArm object</li>
+      <li>Append to template</li>
+      <li>When ready, save template and deploy</li>
+    </ul>
+  </li>
+</ul>
+
+</section>
+<section>
+
+<p>Initialize the template</p>
+<pre><code class="language-ps1">$template = New-PsArmTemplate
 </code></pre>
 
 </section>
 <section>
 
-<pre><code># Get the AzureRM .NET core 0.3.4 preview
-Install-Module AzureRM.NetCore.Preview
-Import-Module AzureRM.NetCore.Preview
-Install-Module AzureRM -MinimumVersion 3.8.0 -Scope CurrentUser
+<p>Add the vNet with subnets</p>
+<pre><code class="language-ps1">$vNet =  New-PsArmVnet -Name 'MyVNet' -AddressPrefixes '10.0.0.0/16' |
+        Add-PsArmVnetSubnet -Name 'Front-End' -AddressPrefix '10.0.0.0/24' |
+        Add-PsArmVnetSubnet -Name 'Back-End' -AddressPrefix '10.0.1.0/24'
+$template.resources += $vnet
 </code></pre>
 
 </section>
 <section>
 
-<section data-background="http://static.guim.co.uk/sys-images/Arts/Arts_/Pictures/2015/2/18/1424262922461/Exodus-II-Dubai-UAE-2010--001.jpg"></section>
+<p>Save it and deploy</p>
+<pre><code class="language-ps1">$resourceGroupName = 'MyRG'
+$templatefile = $resourceGroupName + '.json'
+$deploymentName = $resourceGroupName + $(get-date -f yyyyMMddHHmmss)
 
-<!-- .slide: data-background="http://static.guim.co.uk/sys-images/Arts/Arts_/Pictures/2015/2/18/1424262922461/Exodus-II-Dubai-UAE-2010--001.jpg" -->
+Save-PsArmTemplate -Template $template -TemplateFile $templatefile
 
-<h1>Infrastructure</h1>
+New-AzureRmResourceGroup -Name $ResourceGroupName -Location $location -Force
+New-AzureRmResourceGroupDeployment -Name $deploymentName -Force `
+    -ResourceGroupName $ResourceGroupName -TemplateFile $templateFile -Verbose `
+    -Mode Complete 
+</code></pre>
+
+</section>
+<section>
+
+<p>Complete script for just the vnet</p>
+<pre><code class="language-ps1">$location = "EastUS"
+$template = New-PsArmTemplate
+$vNet =  New-PsArmVnet -Name 'MyVNet' -AddressPrefixes '10.0.0.0/16' |
+        Add-PsArmVnetSubnet -Name 'Front-End' -AddressPrefix '10.0.0.0/24' |
+        Add-PsArmVnetSubnet -Name 'Back-End' -AddressPrefix '10.0.1.0/24'
+
+$template.resources += $vnet
+
+$resourceGroupName = 'MyRG'
+$templatefile = $resourceGroupName + '.json'
+$deploymentName = $resourceGroupName + $(get-date -f yyyyMMddHHmmss)
+
+Save-PsArmTemplate -Template $template -TemplateFile $templatefile
+
+New-AzureRmResourceGroup -Name $ResourceGroupName -Location $location -Force
+New-AzureRmResourceGroupDeployment -Name $deploymentName -Mode Complete -Force `
+    -ResourceGroupName $ResourceGroupName -TemplateFile $templateFile -Verbose
+</code></pre>
+
+</section>
+<section>
+
+<h1>VMs</h1>
+<ul>
+  <li>A webVM with a public IP</li>
+  <li>A DBVM</li>
+  <li>Both reference Nics and Storage created elsewhere in script</li>
+</ul>
+
+</section>
+<section>
+
+<pre><code class="language-ps1">$WebVM = New-PsArmVMConfig -VMName 'MyWebServer' -VMSize 'Standard_DS1_V2' |
+        Set-PsArmVMOperatingSystem -Windows -ComputerName 'MyWebServer' `
+            -AdminUserName $UserName -AdminPassword $Password -ProvisionVMAgent -EnableAutoUpdate |
+        Set-PsArmVMSourceImage -Publisher MicrosoftWindowsServer `
+            -Offer WindowsServer -Sku 2012-R2-Datacenter -Version "latest" |
+        Add-PsArmVMNetworkInterface -Id $WebNic.Id() |
+        Set-PsArmVMOSDisk -Name 'MyWebServer_osdisk' -Caching 'ReadWrite' `
+            -CreateOption 'FromImage' -SourceImage $null `
+            -VhdUri 'https://myrgdemostorage.blob.core.windows.net/vhds/MyWebServer_osdisk.vhd' |
+        Add-PsArmVmDependsOn -Id $Storage.Id()
+</code></pre>
+
+</section>
+<section>
+
+<pre><code class="language-ps1">$DbVM = New-PsArmVMConfig -VMName 'MyDbServer' -VMSize 'Standard_DS1_V2' |
+        Set-PsArmVMOperatingSystem -Windows -ComputerName 'MyDbServer' `
+            -AdminUserName $UserName -AdminPassword $Password -ProvisionVMAgent -EnableAutoUpdate |
+        Set-PsArmVMSourceImage -Publisher MicrosoftWindowsServer `
+            -Offer WindowsServer -Sku 2012-R2-Datacenter -Version "latest" |
+        Add-PsArmVMNetworkInterface -Id $DbNic.Id() |
+        Set-PsArmVMOSDisk -Name 'MyDbServer_osdisk' -Caching 'ReadWrite' `
+            -CreateOption 'FromImage' -SourceImage $null `
+            -VhdUri 'https://myrgdemostorage.blob.core.windows.net/vhds/MyDbServer_osdisk.vhd' |
+        Add-PsArmVmDependsOn -Id $Storage.Id()
+</code></pre>
+
+</section>
+<section>
+
+<h1>Practice DRY</h1>
+
+</section>
+<section>
+
+<pre><code class="language-ps1">function New-StandardVM() {
+    [CmdletBinding()]
+    Param (
+        [parameter(Mandatory=$False)] [string] $VMName = "MyVM",
+        [parameter(Mandatory=$False)] [string] $VMSize = "Standard_DS1_V2",
+        [parameter(Mandatory=$True)] $Storage,
+        [parameter(Mandatory=$True)] [string] $UserName,
+        [parameter(Mandatory=$True)] [string] $Password,
+        [parameter(Mandatory=$True)] [string] $NicID
+    )
+    
+    $OsDiskName = "{0}_osdisk" -f $VMName
+    $OsVhdUri =  "https://{0}.blob.core.windows.net/vhds/{1}.vhd" -f $Storage.name,$OsDiskName
+    New-PsArmVMConfig -VMName $VMName -VMSize $VMSize |
+        Set-PsArmVMOperatingSystem -Windows -ComputerName $VMName `
+            -AdminUserName $UserName -AdminPassword $Password -ProvisionVMAgent -EnableAutoUpdate |
+        Set-PsArmVMSourceImage -Publisher MicrosoftWindowsServer `
+            -Offer WindowsServer -Sku 2012-R2-Datacenter -Version "latest" |
+        Add-PsArmVMNetworkInterface -Id $NicId |
+        Set-PsArmVMOSDisk -Name $OsDiskName -Caching 'ReadWrite' `
+            -CreateOption 'FromImage' -SourceImage $null `
+            -VhdUri $OsVhdUri |
+        Add-PsArmVmDependsOn -Id $Storage.Id()
+}
+</code></pre>
+
+</section>
+<section>
+
+<pre><code class="language-ps1">$WebVM = New-StandardVM -VMName 'MyWebServer' -UserName $UserName -Password $Password `
+    -NicId $WebNic.Id() -Storage $Storage
+
+$DbVM = New-StandardVM -VMName 'MyDbServer' -UserName $UserName -Password $Password `
+    -NicId $DbNic.Id() -Storage $Storage
+</code></pre>
+
+</section>
+<section>
+
+<h1><a href="https://github.com/pburkholder/PsArmResources/blob/preso/examples/FirstVirtualDRY.ps1">Complete Template Script</a></h1>
+
+</section>
+<section>
+<section>
+
+</section>
+</section>
+<section>
+
+<h1>The Way of Testing</h1>
+
+</section>
+<section>
+
+<h1>A slide</h1>
+
+</section>
+<section>
+<section>
+
+</section>
+</section>
+<section>
+
+<h1>EndNotes</h1>
 
 </section>
 <section>
@@ -132,47 +358,15 @@ Install-Module AzureRM -MinimumVersion 3.8.0 -Scope CurrentUser
 <p>PowerShell AzureRM on OsX or Linux is very limited at this time because the underlying .NET libraries are pretty limited. You <em>can</em> login and do some basic calls against resources, but not much else. See for more: <a href="https://github.com/Azure/azure-powershell/issues/3178">https://github.com/Azure/azure-powershell/issues/3178</a><br>
 and <a href="https://github.com/Azure/azure-powershell/issues/3746">https://github.com/Azure/azure-powershell/issues/3746</a> - June 2017 milestone.</p>
 
-</section>
-<section>
+<pre><code class="language-bash">brew cask install powershell
+powershell
+</code></pre>
 
-<h1>Welcome</h1>
-
-</section>
-<section>
-
-<h2>Superb Tables</h2>
-
-<table>
-  <thead>
-    <tr>
-      <th>Item</th>
-      <th>Value</th>
-      <th>Quantity</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Apples</td>
-      <td>$1</td>
-      <td>18</td>
-    </tr>
-    <tr>
-      <td>Lemonade</td>
-      <td>$2</td>
-      <td>20</td>
-    </tr>
-    <tr>
-      <td>Bread</td>
-      <td>$3.50</td>
-      <td>2</td>
-    </tr>
-  </tbody>
-</table>
-
-</section>
-<section>
-
-<h1>Thank You</h1>
+<pre><code># Get the AzureRM .NET core 0.3.4 preview
+Install-Module AzureRM.NetCore.Preview
+Import-Module AzureRM.NetCore.Preview
+Install-Module AzureRM -MinimumVersion 3.8.0 -Scope CurrentUser
+</code></pre>
 
 </section>
 

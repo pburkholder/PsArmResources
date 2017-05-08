@@ -1,0 +1,269 @@
+{
+    "$schema":  "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion":  "1.0.0.0",
+    "resources":  [
+                      {
+                          "type":  "Microsoft.Network/virtualNetworks",
+                          "apiVersion":  "2015-06-15",
+                          "location":  "[resourceGroup().location]",
+                          "name":  "MyVNet",
+                          "comments":  null,
+                          "dependsOn":  null,
+                          "properties":  {
+                                             "addressSpace":  {
+                                                                  "addressPrefixes":  [
+                                                                                          "10.0.0.0/16"
+                                                                                      ]
+                                                              },
+                                             "subnets":  [
+                                                             {
+                                                                 "name":  "Front-End",
+                                                                 "properties":  {
+                                                                                    "addressPrefix":  "10.0.0.0/24",
+                                                                                    "networkSecurityGroup":  null,
+                                                                                    "routeTable":  null
+                                                                                }
+                                                             },
+                                                             {
+                                                                 "name":  "Back-End",
+                                                                 "properties":  {
+                                                                                    "addressPrefix":  "10.0.1.0/24",
+                                                                                    "networkSecurityGroup":  null,
+                                                                                    "routeTable":  null
+                                                                                }
+                                                             }
+                                                         ]
+                                         }
+                      },
+                      {
+                          "type":  "Microsoft.Network/publicIPAddresses",
+                          "apiVersion":  "2016-03-30",
+                          "location":  "[resourceGroup().location]",
+                          "resources":  [
+
+                                        ],
+                          "dependsOn":  [
+
+                                        ],
+                          "comments":  null,
+                          "name":  "Web-Pip0",
+                          "properties":  {
+                                             "publicIPAllocationMethod":  "Dynamic",
+                                             "idleTimeoutInMinutes":  4,
+                                             "enableIPForwarding":  "False",
+                                             "dnsSettings":  null
+                                         }
+                      },
+                      {
+                          "comments":  "",
+                          "type":  "Microsoft.Network/networkInterfaces",
+                          "apiVersion":  "2016-03-30",
+                          "location":  "[resourceGroup().location]",
+                          "resources":  [
+
+                                        ],
+                          "dependsOn":  [
+                                            "[resourceId('Microsoft.Network/publicIPAddresses', 'Web-Pip0')]",
+                                            "[resourceId('Microsoft.Network/virtualNetworks', 'MyVNet')]"
+                                        ],
+                          "name":  "Web-Nic0",
+                          "properties":  {
+                                             "ipConfigurations":  [
+                                                                      {
+                                                                          "name":  "Web-Nic0Config",
+                                                                          "properties":  {
+                                                                                             "privateIpAllocationMethod":  "Dynamic",
+                                                                                             "loadBalancerBackendAddressPools":  [
+
+                                                                                                                                 ],
+                                                                                             "loadBalancerInboundNatRules":  [
+
+                                                                                                                             ],
+                                                                                             "privateIPAddress":  null,
+                                                                                             "publicIpAddress":  {
+                                                                                                                     "id":  "[resourceId('Microsoft.Network/publicIPAddresses', 'Web-Pip0')]"
+                                                                                                                 },
+                                                                                             "subnet":  {
+                                                                                                            "id":  "[concat(resourceId('Microsoft.Network/virtualNetworks', 'MyVNet'), '/subnets/Front-End')]"
+                                                                                                        }
+                                                                                         }
+                                                                      }
+                                                                  ],
+                                             "enableIpFowarding":  "false",
+                                             "dnsSettings":  null,
+                                             "networkSecurityGroup":  null
+                                         }
+                      },
+                      {
+                          "apiVersion":  "2016-01-01",
+                          "type":  "Microsoft.Storage/storageAccounts",
+                          "location":  "EastUS",
+                          "kind":  "Storage",
+                          "name":  "myrgdemostorage",
+                          "sku":  {
+                                      "name":  "Standard_LRS",
+                                      "tier":  "Standard"
+                                  },
+                          "tags":  null
+                      },
+                      {
+                          "comments":  "",
+                          "type":  "Microsoft.Compute/virtualMachines",
+                          "apiVersion":  "2015-06-15",
+                          "location":  "[resourceGroup().location]",
+                          "resources":  [
+
+                                        ],
+                          "dependsOn":  [
+                                            "[resourceId('Microsoft.Network/networkInterfaces', 'Web-Nic0')]",
+                                            "[resourceId('Microsoft.Storage/storageAccounts', 'myrgdemostorage')]"
+                                        ],
+                          "name":  "MyWebServer",
+                          "plan":  null,
+                          "properties":  {
+                                             "storageProfile":  {
+                                                                    "dataDisks":  [
+
+                                                                                  ],
+                                                                    "imageReference":  {
+                                                                                           "publisher":  "MicrosoftWindowsServer",
+                                                                                           "offer":  "WindowsServer",
+                                                                                           "sku":  "2012-R2-Datacenter",
+                                                                                           "version":  "latest"
+                                                                                       },
+                                                                    "osDisk":  {
+                                                                                   "name":  "MyWebServer_osdisk",
+                                                                                   "createOption":  "FromImage",
+                                                                                   "osType":  null,
+                                                                                   "image":  null,
+                                                                                   "vhd":  {
+                                                                                               "uri":  "https://myrgdemostorage.blob.core.windows.net/vhds/MyWebServer_osdisk.vhd"
+                                                                                           },
+                                                                                   "caching":  "ReadWrite"
+                                                                               }
+                                                                },
+                                             "availabilitySet":  null,
+                                             "hardwareProfile":  {
+                                                                     "vmSize":  "Standard_DS1_V2"
+                                                                 },
+                                             "osProfile":  {
+                                                               "secrets":  [
+
+                                                                           ],
+                                                               "computerName":  "MyWebServer",
+                                                               "adminUserName":  "pburkholder",
+                                                               "adminPassword":  "3nap-sn0t-RR",
+                                                               "windowsConfiguration":  {
+                                                                                            "provisionVMAgent":  "True",
+                                                                                            "enableAutomaticUpdates":  null
+                                                                                        }
+                                                           },
+                                             "networkProfile":  {
+                                                                    "networkInterfaces":  [
+                                                                                              {
+                                                                                                  "id":  "[resourceId('Microsoft.Network/networkInterfaces', 'Web-Nic0')]"
+                                                                                              }
+                                                                                          ]
+                                                                }
+                                         }
+                      },
+                      {
+                          "comments":  "",
+                          "type":  "Microsoft.Network/networkInterfaces",
+                          "apiVersion":  "2016-03-30",
+                          "location":  "[resourceGroup().location]",
+                          "resources":  [
+
+                                        ],
+                          "dependsOn":  [
+                                            "[resourceId('Microsoft.Network/virtualNetworks', 'MyVNet')]"
+                                        ],
+                          "name":  "Db-Nic0",
+                          "properties":  {
+                                             "ipConfigurations":  [
+                                                                      {
+                                                                          "name":  "Db-Nic0Config",
+                                                                          "properties":  {
+                                                                                             "privateIpAllocationMethod":  "Dynamic",
+                                                                                             "loadBalancerBackendAddressPools":  [
+
+                                                                                                                                 ],
+                                                                                             "loadBalancerInboundNatRules":  [
+
+                                                                                                                             ],
+                                                                                             "privateIPAddress":  null,
+                                                                                             "publicIpAddress":  null,
+                                                                                             "subnet":  {
+                                                                                                            "id":  "[concat(resourceId('Microsoft.Network/virtualNetworks', 'MyVNet'), '/subnets/Back-End')]"
+                                                                                                        }
+                                                                                         }
+                                                                      }
+                                                                  ],
+                                             "enableIpFowarding":  "false",
+                                             "dnsSettings":  null,
+                                             "networkSecurityGroup":  null
+                                         }
+                      },
+                      {
+                          "comments":  "",
+                          "type":  "Microsoft.Compute/virtualMachines",
+                          "apiVersion":  "2015-06-15",
+                          "location":  "[resourceGroup().location]",
+                          "resources":  [
+
+                                        ],
+                          "dependsOn":  [
+                                            "[resourceId('Microsoft.Network/networkInterfaces', 'Db-Nic0')]",
+                                            "[resourceId('Microsoft.Storage/storageAccounts', 'myrgdemostorage')]"
+                                        ],
+                          "name":  "MyDbServer",
+                          "plan":  null,
+                          "properties":  {
+                                             "storageProfile":  {
+                                                                    "dataDisks":  [
+
+                                                                                  ],
+                                                                    "imageReference":  {
+                                                                                           "publisher":  "MicrosoftWindowsServer",
+                                                                                           "offer":  "WindowsServer",
+                                                                                           "sku":  "2012-R2-Datacenter",
+                                                                                           "version":  "latest"
+                                                                                       },
+                                                                    "osDisk":  {
+                                                                                   "name":  "MyDbServer_osdisk",
+                                                                                   "createOption":  "FromImage",
+                                                                                   "osType":  null,
+                                                                                   "image":  null,
+                                                                                   "vhd":  {
+                                                                                               "uri":  "https://myrgdemostorage.blob.core.windows.net/vhds/MyDbServer_osdisk.vhd"
+                                                                                           },
+                                                                                   "caching":  "ReadWrite"
+                                                                               }
+                                                                },
+                                             "availabilitySet":  null,
+                                             "hardwareProfile":  {
+                                                                     "vmSize":  "Standard_DS1_V2"
+                                                                 },
+                                             "osProfile":  {
+                                                               "secrets":  [
+
+                                                                           ],
+                                                               "computerName":  "MyDbServer",
+                                                               "adminUserName":  "pburkholder",
+                                                               "adminPassword":  "3nap-sn0t-RR",
+                                                               "windowsConfiguration":  {
+                                                                                            "provisionVMAgent":  "True",
+                                                                                            "enableAutomaticUpdates":  null
+                                                                                        }
+                                                           },
+                                             "networkProfile":  {
+                                                                    "networkInterfaces":  [
+                                                                                              {
+                                                                                                  "id":  "[resourceId('Microsoft.Network/networkInterfaces', 'Db-Nic0')]"
+                                                                                              }
+                                                                                          ]
+                                                                }
+                                         }
+                      }
+                  ]
+}
