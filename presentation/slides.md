@@ -93,7 +93,6 @@ New-AzureRmResourceGroupDeployment -Name $deploymentName -Force `
 ```
 
 ***
-***
 
 # The Way of POSH
 
