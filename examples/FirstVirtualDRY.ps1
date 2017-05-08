@@ -64,7 +64,7 @@ $DbNic = New-PsArmNetworkInterface -Name 'Db-Nic0' `
 $DbNic.dependsOn += $vNet.id()     
 $template.resources += $DbNic
 
-$DbVM = New-StandardVM -VMName 'MyDbServer' -UserName $UserName -Password $Password `
+$DbVM = New-StandardVM -VMName 'MyDbServer' -VMSize 'Standard_DS2_V2' -UserName $UserName -Password $Password `
             -NicId $DbNic.Id() -Storage $Storage
 $template.resources += $DbVM
 

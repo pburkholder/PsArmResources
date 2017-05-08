@@ -3,14 +3,14 @@ Set-StrictMode -Version Latest
 Function Assert-PSArmGroupTotal {
     Param(
         [parameter(Mandatory=$True,Position=0)]
-        [string] $Target,
+        [System.Object] $Target,
 
         [parameter(Mandatory=$True,Position=1)]
         [string] $Matches
     )
     Context "Resource Group Total" {
-       It "should have $resourceTotal total resources" {
-           $resourceGroup.resources.length | Should Be $resourceTotal
+       It "should have $Matches total resources" {
+           $Target.resources.length | Should Be $Matches
         }
     }
 }
@@ -18,15 +18,15 @@ Function Assert-PSArmGroupTotal {
 Function Assert-PsArmGroupSummary {
     Param(
         [parameter(Mandatory=$True,Position=0)]
-        [string] $Target,
+        [System.Object] $Target,
 
         [parameter(Mandatory=$True,Position=1)]
-        [string] $Matches
+        [System.Object] $Matches
     )
     Context "Overall Group" {
-        It "should have <Expected> <Resource>" -TestCases $SummaryTestCases {
+        It "should have <Expected> <Resource>" -TestCases $Matches {
             param($Resource, $Expected)
-            $Objects =  @($resourceGroup.resources | where {$_.type -Eq $Resource})
+            $Objects =  @($target.resources | where {$_.type -Eq $Resource})
             $Objects.length | Should be $Expected
         }
     } 
@@ -35,14 +35,14 @@ Function Assert-PsArmGroupSummary {
 Function Assert-PsArmVM {
     Param(
         [parameter(Mandatory=$True,Position=0)]
-        [string] $Target,
+        [System.Object] $Target,
 
         [parameter(Mandatory=$True,Position=1)]
-        [string] $Matches
+        [System.Object] $Matches
     )
     Context "VMs" {
-        $VMs = $resourceGroup.resources | where {$_.type -eq 'Microsoft.Compute/virtualMachines'}
-        It "desired should include VM named <Name> and sized <VmSize>" -TestCases $VMTestCases {
+        $VMs = $target.resources | where {$_.type -eq 'Microsoft.Compute/virtualMachines'}
+        It "desired should include VM named <Name> and sized <VmSize>" -TestCases $Matches {
             param($Name, $VmSize)
             $normalizedName = $Name.Replace('-','_')
             $VM = $VMs | 
@@ -55,14 +55,14 @@ Function Assert-PsArmVM {
 Function Assert-PsArmStorage {
     Param(
         [parameter(Mandatory=$True,Position=0)]
-        [string] $Target,
+        [System.Object] $Target,
 
         [parameter(Mandatory=$True,Position=1)]
-        [string] $Matches
+        [hashtable] $Matches
     )
     Context "StorageAccounts" {
-        $StorageAccounts = $resourceGroup.resources | where {$_.type -Match 'storageAccounts'}
-        It  "should <State> include storage account <Name>" -TestCases $StorageTestCases {
+        $StorageAccounts = $target.resources | where {$_.type -Match 'storageAccounts'}
+        It  "should <State> include storage account <Name>" -TestCases $Matches {
             param($Name, $State)
             $StorageAccount = $StorageAccounts | where {$_.name -Match $Name}
             if ($State) {
@@ -72,10 +72,10 @@ Function Assert-PsArmStorage {
             }
         }
 
-        It "should use replication <Replication>" -TestCases $StorageTestCases {
+        It "should use replication <Replication>" -TestCases $Matches {
             param($Name, $Replication)
             $StorageAccounts = 
-                $resourceGroup.resources | where {$_.type -Match 'storageAccounts'}
+                $target.resources | where {$_.type -Match 'storageAccounts'}
             $StorageAccount = $StorageAccounts | where {$_.name -Match $Name}
             $StorageAccount.sku.name | Should Match $Replication
         }
@@ -85,20 +85,20 @@ Function Assert-PsArmStorage {
 Function Assert-PsArmNetworkSecurityGroup {
     Param(
         [parameter(Mandatory=$True,Position=0)]
-        [string] $Target,
+        [System.Object] $Target,
 
         [parameter(Mandatory=$True,Position=1)]
-        [string] $Matches
+        [System.Object] $Matches
     )
     Context "NetworkSecurityGroup" {
-        $NSGs = @($resourceGroup.resources | 
+        $NSGs = @($target.resources | 
             where {$_.type -Eq 'Microsoft.Network/networkSecurityGroups'})
-        It  "should include networkSecurityGroup <Name>" -TestCases $TestCases {
+        It  "should include networkSecurityGroup <Name>" -TestCases $Matches {
             param($Name)
             @($NSGs | where {$_.name -Match $Name}).length | Should Be 1
         }
 
-        It  "networkSecurityGroup <Name> should have <SecurityRuleCount> rules" -TestCases $TestCases {
+        It  "networkSecurityGroup <Name> should have <SecurityRuleCount> rules" -TestCases $Matches {
             param($Name,$SecurityRuleCount)
             $NSG = $NSGs | where {$_.name -Match $Name} 
             $NSG.properties.securityRules.count | Should Be $SecurityRuleCount
@@ -109,25 +109,25 @@ Function Assert-PsArmNetworkSecurityGroup {
 Function Assert-PsArmVNet {
     Param(
         [parameter(Mandatory=$True,Position=0)]
-        [string] $Target,
+        [System.Object] $Target,
 
         [parameter(Mandatory=$True,Position=1)]
-        [string] $Matches
+        [System.Object] $Matches
     )
     Context "VNet" {
-        $VNets = @($resourceGroup.resources | 
+        $VNets = @($target.resources | 
             where {$_.type -Eq 'Microsoft.Network/virtualNetworks'})
-        It  "should include vNet <Name>" -TestCases $TestCases {
+        It  "should include vNet <Name>" -TestCases $Matches {
             param($Name)
             @($VNets | where {$_.name -Match $Name}).length | Should Be 1
         }
-        It "should use AddressPrefix <AddressPrefixes>" -TestCases $TestCases {
+        It "should use AddressPrefix <AddressPrefixes>" -TestCases $Matches {
             param($Name, $AddressPrefixes)
             $VNet = $VNets | where {$_.name -Match $Name}
             $Vnet.properties.addressspace.addressPrefixes |
                 Should Be $AddressPrefixes
         }
-        It "should have <SubnetCount> subnets" -TestCases $TestCases {
+        It "should have <SubnetCount> subnets" -TestCases $Matches {
             param($Name, $SubnetCount)
             $VNet = $VNets | where {$_.name -Match $Name}
             $Vnet.properties.subnets.count |
@@ -139,19 +139,19 @@ Function Assert-PsArmVNet {
 Function Assert-PsArmRouteTable {
     Param(
         [parameter(Mandatory=$True,Position=0)]
-        [string] $Target,
+        [System.Object] $Target,
 
         [parameter(Mandatory=$True,Position=1)]
-        [string] $Matches
+        [System.Object] $Matches
     )
     Context "RouteTables" {
-        $RouteTables = @($resourceGroup.resources | 
+        $RouteTables = @($target.resources | 
             where {$_.type -Eq 'Microsoft.Network/routeTables'})
-        It  "should include routeTable <Name>" -TestCases $TestCases {
+        It  "should include routeTable <Name>" -TestCases $Matches {
             param($Name)
             @($RouteTables| where {$_.name -Match $Name}).length | Should Be 1
         }
-        It "should have <RouteCount> routes" -TestCases $TestCases {
+        It "should have <RouteCount> routes" -TestCases $Matches {
             param($Name, $RouteCount)
             $RouteTable = $RouteTables | where {$_.name -Match $Name}
             $RouteTable.properties.routes.count |
@@ -168,7 +168,7 @@ Function Assert-PsArmRouteTable {
 #  everything with tests at this point
 #
 # Discussion Points:
-# 1. Export-AzureRMResourceGroup is incomplete, and doesn't export VNet peerings. This is an API limitation
+# 1. Export-AzureRMtarget is incomplete, and doesn't export VNet peerings. This is an API limitation
 # 2. The vNet Peerings can be seen with say:
 #      PS> $a = Get-AzureRMResource -ResourceGroupName 'DevVnetVA' -ResourceType 'Microsoft.Network/virtualNetworks' -ExpandProperties
 #      PS> $a.Properties.virtualNetworkPeerings.properties
@@ -179,7 +179,7 @@ Function Assert-PsArmRouteTable {
 #    See https://github.com/Azure/azure-quickstart-templates/blob/master/201-vnet-to-vnet-peering/azuredeploy.json#L44-L65
 
 
-Function Get-ActualResourceGroup([string] $ResourceGroupName) {
+Function Get-PsArmActualResourceGroup([string] $ResourceGroupName) {
     $DeploymentName = $ResourceGroupName + $(get-date -f yyyyMMddHHmmss)
     $actualFile = $env:TEMP + '\actual-'+ $deploymentName + '.json'
     Write-Verbose "Saving actual Azure state to $actualFile"
@@ -208,4 +208,4 @@ Export-ModuleMember -Function Assert-PsArmVNet
 Export-ModuleMember -Function Assert-PsArmRouteTable
 
 Export-ModuleMember -Function Get-PsArmActualResourceGroup
-Export-ModuleMember -Function Get-PsArmDesiredResourceGroup
+Export-ModuleMember -Function Get-DesiredResourceGroup
