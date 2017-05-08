@@ -1,6 +1,13 @@
 Set-StrictMode -Version Latest
 
-Function Audit-ResourceGroupTotal($ResourceGroup, $ResourceTotal) {
+Function Assert-PSArmGroupTotal {
+    Param(
+        [parameter(Mandatory=$True,Position=0)]
+        [string] $Target,
+
+        [parameter(Mandatory=$True,Position=1)]
+        [string] $Matches
+    )
     Context "Resource Group Total" {
        It "should have $resourceTotal total resources" {
            $resourceGroup.resources.length | Should Be $resourceTotal
@@ -8,7 +15,14 @@ Function Audit-ResourceGroupTotal($ResourceGroup, $ResourceTotal) {
     }
 }
 
-Function Audit-ResourceGroupSummary($ResourceGroup, $SummaryTestCases) {
+Function Assert-PsArmGroupSummary {
+    Param(
+        [parameter(Mandatory=$True,Position=0)]
+        [string] $Target,
+
+        [parameter(Mandatory=$True,Position=1)]
+        [string] $Matches
+    )
     Context "Overall Group" {
         It "should have <Expected> <Resource>" -TestCases $SummaryTestCases {
             param($Resource, $Expected)
@@ -18,7 +32,14 @@ Function Audit-ResourceGroupSummary($ResourceGroup, $SummaryTestCases) {
     } 
 }
 
-Function Audit-ResourceGroupVMs($ResourceGroup, $VMTestCases) {
+Function Assert-PsArmVM {
+    Param(
+        [parameter(Mandatory=$True,Position=0)]
+        [string] $Target,
+
+        [parameter(Mandatory=$True,Position=1)]
+        [string] $Matches
+    )
     Context "VMs" {
         $VMs = $resourceGroup.resources | where {$_.type -eq 'Microsoft.Compute/virtualMachines'}
         It "desired should include VM named <Name> and sized <VmSize>" -TestCases $VMTestCases {
@@ -31,7 +52,14 @@ Function Audit-ResourceGroupVMs($ResourceGroup, $VMTestCases) {
     }
 }
 
-Function Audit-ResourceGroupStorage($ResourceGroup, $StorageTestCases) {
+Function Assert-PsArmStorage {
+    Param(
+        [parameter(Mandatory=$True,Position=0)]
+        [string] $Target,
+
+        [parameter(Mandatory=$True,Position=1)]
+        [string] $Matches
+    )
     Context "StorageAccounts" {
         $StorageAccounts = $resourceGroup.resources | where {$_.type -Match 'storageAccounts'}
         It  "should <State> include storage account <Name>" -TestCases $StorageTestCases {
@@ -54,7 +82,14 @@ Function Audit-ResourceGroupStorage($ResourceGroup, $StorageTestCases) {
     }
 }
 
-Function Audit-AzureRMNetworkSecurityGroup($ResourceGroup, $TestCases) {
+Function Assert-PsArmNetworkSecurityGroup {
+    Param(
+        [parameter(Mandatory=$True,Position=0)]
+        [string] $Target,
+
+        [parameter(Mandatory=$True,Position=1)]
+        [string] $Matches
+    )
     Context "NetworkSecurityGroup" {
         $NSGs = @($resourceGroup.resources | 
             where {$_.type -Eq 'Microsoft.Network/networkSecurityGroups'})
@@ -71,7 +106,14 @@ Function Audit-AzureRMNetworkSecurityGroup($ResourceGroup, $TestCases) {
     }
 }
 
-Function Audit-AzureRMVNet($ResourceGroup, $TestCases) {
+Function Assert-PsArmVNet {
+    Param(
+        [parameter(Mandatory=$True,Position=0)]
+        [string] $Target,
+
+        [parameter(Mandatory=$True,Position=1)]
+        [string] $Matches
+    )
     Context "VNet" {
         $VNets = @($resourceGroup.resources | 
             where {$_.type -Eq 'Microsoft.Network/virtualNetworks'})
@@ -94,7 +136,14 @@ Function Audit-AzureRMVNet($ResourceGroup, $TestCases) {
     }
 }
 
-Function Audit-AzureRMRouteTable ($ResourceGroup, $TestCases) {
+Function Assert-PsArmRouteTable {
+    Param(
+        [parameter(Mandatory=$True,Position=0)]
+        [string] $Target,
+
+        [parameter(Mandatory=$True,Position=1)]
+        [string] $Matches
+    )
     Context "RouteTables" {
         $RouteTables = @($resourceGroup.resources | 
             where {$_.type -Eq 'Microsoft.Network/routeTables'})
@@ -150,25 +199,13 @@ Function Get-DesiredResourceGroup([string] $ResourceGroupName, [string] $DeployS
     }
 }
 
-# Export-ResourceGroupDeployment doesn't provide the
-# actual resource name, but something like 
-#    [parameters('networkSecurityGroups_DevVnetIADefaultNsg_name')]
-# so we add the _simpalename_name to make it more likely unique
-Function Get-AzureRMParamName([string] $simpleName) {
-    if ($global:mungeNames) { 
-        return "_" + $simpleName + "_nameasldj"
-    }
-    return $simpleName
-}
+Export-ModuleMember -Function Assert-PSArmGroupTotal
+Export-ModuleMember -Function Assert-PsArmGroupSummary
+Export-ModuleMember -Function Assert-PsArmVM
+Export-ModuleMember -Function Assert-PsArmStorage
+Export-ModuleMember -Function Assert-PsArmNetworkSecurityGroup
+Export-ModuleMember -Function Assert-PsArmVNet
+Export-ModuleMember -Function Assert-PsArmRouteTable
 
-Export-ModuleMember -Function Audit-ResourceGroupTotal
-Export-ModuleMember -Function Audit-ResourceGroupSummary
-Export-ModuleMember -Function Audit-ResourceGroupVMs
-Export-ModuleMember -Function Audit-ResourceGroupStorage
-
-Export-ModuleMember -Function Audit-AzureRMNetworkSecurityGroup
-Export-ModuleMember -Function Audit-AzureRMVNet
-Export-ModuleMember -Function Audit-AzureRMRouteTable
-
-Export-ModuleMember -Function Get-ActualResourceGroup
-Export-ModuleMember -Function Get-DesiredResourceGroup
+Export-ModuleMember -Function Get-PsArmActualResourceGroup
+Export-ModuleMember -Function Get-PsArmDesiredResourceGroup

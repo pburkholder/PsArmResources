@@ -64,18 +64,19 @@ $vNetCases = @(
 )
 
 Describe $ResourceGroupName -Tag Actual {
-    $actual = Get-ActualResourceGroup $ResourceGroupName
-    Audit-ResourceGroupTotal $actual $ResourceTotalTestCase
-    Audit-ResourceGroupSummary $actual $ResourceSummaryTestCases
-    Audit-ResourceGroupVMs $actual $VMTestCases
-    Audit-ResourceGroupStorage $actual $StorageCases
+    $target = Get-PsArmActualResourceGroup $ResourceGroupName
+    Assert-PSArmGroupTotal $target -Matches $ResourceTotalTestCase
+    Assert-PSArmGroupSummary $target -Matches $ResourceSummaryTestCases
+    Assert-PSArmVM $target -Matches $VMTestCases
+    Assert-PSArmStorage $target -Matches $StorageCases
+    Assert-PSArmVnet $target -Matches $vNetCases
 }
 
 Describe $ResourceGroupName -Tag Desired  {
-    $desired = Get-DesiredResourceGroup $ResourceGroupName $DeployScript
-    Audit-ResourceGroupTotal $desired $ResourceTotalTestCase
-    Audit-ResourceGroupSummary $desired $ResourceSummaryTestCases
-    Audit-ResourceGroupVMs $desired $VMTestCases
-    Audit-ResourceGroupStorage $desired $StorageCases
-    Audit-AzureRMVnet $desired $vNetCases
+    $target = Get-PsArmDesiredResourceGroup $ResourceGroupName $DeployScript
+    Assert-PSArmGroupTotal $target -Matches $ResourceTotalTestCase
+    Assert-PSArmGroupSummary $target -Matches $ResourceSummaryTestCases
+    Assert-PSArmVM $target -Matches $VMTestCases
+    Assert-PSArmStorage $target -Matches $StorageCases
+    Assert-PSArmVnet $target -Matches $vNetCases
 }
