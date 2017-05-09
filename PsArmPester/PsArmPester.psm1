@@ -21,6 +21,7 @@ Function Assert-PsArmGroupSummary {
         [parameter(Mandatory=$True,Position=0)]
         [System.Object] $Target,
 
+        [alias("Matches")]
         [parameter(Mandatory=$True,Position=1)]
         [System.Object] $TestCases
     )
@@ -38,6 +39,7 @@ Function Assert-PsArmVM {
         [parameter(Mandatory=$True,Position=0)]
         [System.Object] $Target,
 
+        [alias("Matches")]
         [parameter(Mandatory=$True,Position=1)]
         [System.Object] $TestCases
     )
@@ -58,6 +60,7 @@ Function Assert-PsArmStorage {
         [parameter(Mandatory=$True,Position=0)]
         [System.Object] $Target,
 
+        [alias("Matches")]
         [parameter(Mandatory=$True,Position=1)]
         [System.Object] $TestCases
     )
@@ -88,6 +91,7 @@ Function Assert-PsArmNetworkSecurityGroup {
         [parameter(Mandatory=$True,Position=0)]
         [System.Object] $Target,
 
+        [alias("Matches")]
         [parameter(Mandatory=$True,Position=1)]
         [System.Object] $TestCases
     )
@@ -112,6 +116,7 @@ Function Assert-PsArmVNet {
         [parameter(Mandatory=$True,Position=0)]
         [System.Object] $Target,
 
+        [alias("Matches")]
         [parameter(Mandatory=$True,Position=1)]
         [System.Object] $TestCases
     )
@@ -142,6 +147,7 @@ Function Assert-PsArmRouteTable {
         [parameter(Mandatory=$True,Position=0)]
         [System.Object] $Target,
 
+        [alias("Matches")]
         [parameter(Mandatory=$True,Position=1)]
         [System.Object] $TestCases
     )
@@ -180,7 +186,7 @@ Function Assert-PsArmRouteTable {
 #    See https://github.com/Azure/azure-quickstart-templates/blob/master/201-vnet-to-vnet-peering/azuredeploy.json#L44-L65
 
 
-Function Get-PsArmActualResourceGroup([string] $ResourceGroupName) {
+Function Get-ActualResourceGroup([string] $ResourceGroupName) {
     $DeploymentName = $ResourceGroupName + $(get-date -f yyyyMMddHHmmss)
     $actualFile = $env:TEMP + '\actual-'+ $deploymentName + '.json'
     Write-Verbose "Saving actual Azure state to $actualFile"
@@ -208,5 +214,5 @@ Export-ModuleMember -Function Assert-PsArmNetworkSecurityGroup
 Export-ModuleMember -Function Assert-PsArmVNet
 Export-ModuleMember -Function Assert-PsArmRouteTable
 
-Export-ModuleMember -Function Get-PsArmActualResourceGroup
+Export-ModuleMember -Function Get-ActualResourceGroup
 Export-ModuleMember -Function Get-DesiredResourceGroup
