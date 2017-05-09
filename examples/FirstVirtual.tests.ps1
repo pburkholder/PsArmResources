@@ -64,7 +64,8 @@ $vNetCases = @(
 )
 
 Describe $ResourceGroupName -Tag Actual {
-    $target = Get-ActualResourceGroup $ResourceGroupName
+    #$target = Get-ActualResourceGroup $ResourceGroupName
+    $target = Get-PsArmPesterResourceGroup -Actual -RG $ResourceGroupName
     Assert-PSArmGroupTotal $target -Matches $ResourceTotalTestCase
     Assert-PSArmGroupSummary $target -Matches $ResourceSummaryTestCases
     Assert-PSArmVM $target -Matches $VMTestCases
@@ -73,7 +74,7 @@ Describe $ResourceGroupName -Tag Actual {
 }
 
 Describe $ResourceGroupName -Tag Desired  {
-    $target = Get-DesiredResourceGroup $ResourceGroupName $DeployScript
+    $target = Get-PsArmPesterResourceGroup -Desired -RG $ResourceGroupName -Deploy $DeployScript
     Assert-PSArmGroupTotal $target -Matches $ResourceTotalTestCase
     Assert-PSArmGroupSummary $target -Matches $ResourceSummaryTestCases
     Assert-PSArmVM $target -Matches $VMTestCases

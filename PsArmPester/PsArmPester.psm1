@@ -194,7 +194,7 @@ Function Get-ActualResourceGroup([string] $ResourceGroupName) {
     Get-Content $actualFile | ConvertFrom-Json
 }
 
-Function Get-DesiredResourceGroup([string] $ResourceGroupName, [string] $DeployScript) {
+Function Get-PsArmPesterDesiredResourceGroup([string] $ResourceGroupName, [string] $DeployScript) {
     if (Test-Path $DeployScript) {
         $DeploymentName = $ResourceGroupName + $(get-date -f yyyyMMddHHmmss)
         $desiredFile = $env:TEMP + '\desired-'+ $deploymentName + '.json'
@@ -206,13 +206,39 @@ Function Get-DesiredResourceGroup([string] $ResourceGroupName, [string] $DeployS
     }
 }
 
-Export-ModuleMember -Function Assert-PSArmGroupTotal
-Export-ModuleMember -Function Assert-PsArmGroupSummary
-Export-ModuleMember -Function Assert-PsArmVM
-Export-ModuleMember -Function Assert-PsArmStorage
-Export-ModuleMember -Function Assert-PsArmNetworkSecurityGroup
-Export-ModuleMember -Function Assert-PsArmVNet
-Export-ModuleMember -Function Assert-PsArmRouteTable
+Function Get-PsArmPesterResourceGroup {
+    [CmdletBinding()]
+    Param(
+        [parameter(Mandatory=$True,ParameterSetName = "Desired")]
+        [switch] $Desired,
+        
+        [parameter(Mandatory=$True,ParameterSetName = "Actual")]
+        [switch] $Actual,
 
-Export-ModuleMember -Function Get-ActualResourceGroup
-Export-ModuleMember -Function Get-DesiredResourceGroup
+        [alias("RG")]
+        [parameter(Mandatory=$True)]
+        [string] $ResourceGroupName,
+
+        [parameter(Mandatory=$True, ParameterSetName = "Desired")]
+        [string] $DeployScript
+    )
+
+    if ($Desired) {
+        if (Test-Path $DeployScript) {
+            $DeploymentName = $ResourceGroupName + $(get-date -f yyyyMMddHHmmss)
+            $desiredFile = $env:TEMP + '\desired-'+ $deploymentName + '.json'
+            Write-Verbose "Save desired Azure state from $DeployScript to $desiredFile"
+            Invoke-Expression "$DeployScript -Path $desiredFile"
+            Get-Content $desiredFile | ConvertFrom-Json
+        } else {
+            Write-Error "Can't find path $DeployScript"
+        }
+    }
+    if ($Actual) {
+        $DeploymentName = $ResourceGroupName + $(get-date -f yyyyMMddHHmmss)
+        $actualFile = $env:TEMP + '\actual-'+ $deploymentName + '.json'
+        Write-Verbose "Saving actual Azure state to $actualFile"
+        $result = Export-AzureRmResourceGroup -ResourceGroupName $ResourceGroupName -IncludeParameterDefaultValue -Path $actualFile
+        Get-Content $actualFile | ConvertFrom-Json
+    }
+}
